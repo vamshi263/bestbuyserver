@@ -13,6 +13,7 @@
   "type": "commonjs",
   "dependencies": {
     "body-parser": "^2.2.2",
+    "cloudinary": "^1.41.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.0",
     "express": "^5.2.1",
@@ -20,8 +21,10 @@
     "git": "^0.1.5",
     "mongoose": "^9.2.3",
     "multer": "^2.1.1",
+    "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^8.0.4",
     "nodemon": "^3.1.14",
+    "puppeteer": "^24.42.0",
     "razorpay": "^2.9.6",
     "react-hot-toast": "^2.6.0"
   },

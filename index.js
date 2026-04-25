@@ -12,7 +12,17 @@ const app = express()
 const session=require("express-session")
 require("dotenv").config()
 const fs=require("fs")
+const crypto = require("crypto")
 const Razorpay = require("razorpay")
+const invoiceHTML = require("./models/invoiceHTML")
+const generatePDF = require("./models/pdf")
+const cloudinary = require("cloudinary").v2
+const { CloudinaryStorage } = require("multer-storage-cloudinary")
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -21,10 +31,10 @@ const razorpay = new Razorpay({
 
 app.use(express.json())
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: true,
     credentials: true
 }))
-app.use("/uploads", express.static("uploads"))
+//app.use("/uploads", express.static("uploads"))
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB Connected "))
@@ -35,7 +45,8 @@ app.use(session(
     resave:false,
     saveUninitialized:false,
     cookie: {
-        secure: false
+        secure: true,
+        sameSite: "none"
     }
     }
 ))
@@ -51,19 +62,35 @@ app.get("/Admin/getproduct/:id",(req,res) =>{
     .then(product => res.json (product))
     .catch(err => res.json (err))
 })
-
-let imageCounter = 0
-const storage = multer.diskStorage({
-    destination: function(req, file, cb){
-        cb(null, "uploads/")
-    },
-    filename: function(req, file, cb){
-        imageCounter++
-        cb(null, Date.now() + " - " +  file.originalname + imageCounter + " - " + path.extname(file.originalname))
-    }
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "products",
+    allowed_formats: ["jpg", "png", "jpeg"]
+  }
 })
 const upload = multer({
   storage: storage
+})
+
+app.get("/Admin/order-status", async (req, res) => {
+  try {
+    const totalOrders = await orderModel.countDocuments()
+    const pending = await orderModel.countDocuments({ status: "Placed" })
+    const shipped = await orderModel.countDocuments({ status: "Shipped" })
+    const delivered = await orderModel.countDocuments({ status: "Delivered" })
+
+    res.json({
+      totalOrders,
+      pending,
+      shipped,
+      delivered
+    })
+
+  } catch (err) {
+    console.log(err)
+    res.json({})
+  }
 })
 
 app.post('/Login',(req,res)=>{
@@ -112,7 +139,7 @@ app.post('/Signup',(req,res)=>
 app.post('/Admin/addproduct', upload.array("image",10), async(req,res)=>
 { 
   try{
-  const imagePaths = req.files.map(file => file.filename)
+    const imagePaths = req.files.map(file => file.path)
   const newProduct = new productsModel({
     ProductName: req.body.ProductName,
     Quantity: req.body.Quantity,
@@ -128,6 +155,7 @@ app.post('/Admin/addproduct', upload.array("image",10), async(req,res)=>
         res.json("Error uploading product")
     }
   })
+
 
 app.post("/cart/add", async (req, res) => {
   try {
@@ -176,32 +204,41 @@ app.post("/payment/orders", async (req, res) => {
     res.status(500).send("Error creating Razorpay order")
   }
 })
-
 app.post("/payment/verify", async (req, res) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body
-  console.log(req.body)
+
   try {
     const sign = razorpay_order_id + "|" + razorpay_payment_id
-    const expectedSign = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+
+    const expectedSign = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(sign.toString())
       .digest("hex")
 
-    console.log(razorpay_signature === expectedSign)
-
     const isAuthentic = razorpay_signature === expectedSign
+
     if (isAuthentic) {
-     const payment = new Payment({
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature
-     }) 
-     await payment.save()
-     res.json({
-      message:"Payment Successfully"
-     })
-  }
-}catch (err) {
+      await orderModel.findOneAndUpdate(
+        { "payment.razorpay_order_id": razorpay_order_id },
+        {
+          "payment.razorpay_payment_id": razorpay_payment_id,
+          "payment.razorpay_signature": razorpay_signature,
+          paymentStatus: "Completed"
+        }
+      )
+
+      return res.json({ message: "Payment Successfully" })
+    } else {
+      return res.status(400).json({
+        message: "Payment verification failed"
+      })
+    }
+
+  } catch (err) {
     console.log(err)
+    return res.status(500).json({
+      message: "Server error"
+    })
   }
 })
 
@@ -211,7 +248,7 @@ app.post("/order/place", async (req, res) => {
       return res.json("Please login first")
     }
     const userId = req.session.user.id
-    const { email, phone, paymentId } = req.body
+    const { email, phone, paymentId, razorpay_order_id } = req.body
     const cart = await cartsModel.findOne({ userId })
     if (!cart || cart.products.length === 0) {
       return res.json("Cart is empty")
@@ -239,21 +276,26 @@ app.post("/order/place", async (req, res) => {
         phone
       },
       paymentMethod: "ONLINE",
-      paymentStatus: "Completed",
+      paymentStatus: "Pending",
       payment: {
+        razorpay_order_id: razorpay_order_id,
         razorpay_payment_id: paymentId
       },
       status: "Placed"
     })
     await newOrder.save()
     const user = await userModel.findById(userId)
+    const html = invoiceHTML(newOrder)
+    const pdfBuffer = await generatePDF(html)
+    console.log("Reached before mail")
     await sendMail(
       user.Email,
       "Order Placed Successfully",
       `<h3>Order Confirmation</h3>
        <p>Your order has been placed successfully</p>
        <p><b>Total:</b> ₹${finalTotal}</p>
-       <p>Status: PLACED</p>`
+       <p>Status: PLACED</p>`,
+       pdfBuffer
     )
     await cartsModel.deleteOne({ userId })
     res.json("Order placed successfully")
@@ -262,7 +304,6 @@ app.post("/order/place", async (req, res) => {
     res.json("Error placing order")
   }
 })
-
 
 app.post("/cart/update", async (req, res) => {
   try {
@@ -365,13 +406,6 @@ app.put('/Admin/orderstatus/:id',async(req,res)=>{
 app.delete("/Admin/deleteProduct/:id", async(req,res) =>{
     const id= req.params.id;
         const product = await productsModel.findById({_id:id})
-        product.image.forEach((img)=>{
-            fs.unlink(`uploads/${img}`, (err)=>{
-                if(err){
-                    console.log("Error deleting image:", err)
-                }
-            })
-        })
     await productsModel.findByIdAndDelete({_id:id})
     .then(product => res.json (product))
     .catch(err => res.json (err))
@@ -455,7 +489,6 @@ app.get("/search", async(req,res) => {
         res.json(products)
     } catch(err) {
         console.log(err)
-        res.status(400).json({message:error.message});
     }
 })
 
