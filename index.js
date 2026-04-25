@@ -31,7 +31,7 @@ const razorpay = new Razorpay({
 
 app.use(express.json())
 app.use(cors({
-    origin: true,
+    origin: ["https://bestbuy-cloned.netlify.app/"],
     credentials: true
 }))
 //app.use("/uploads", express.static("uploads"))
@@ -39,6 +39,7 @@ app.use(cors({
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB Connected "))
 .catch(err => console.log("MongoDB Error", err.message))
+app.set("trust proxy", 1)
 app.use(session(
     {
     secret:"secretkey",
