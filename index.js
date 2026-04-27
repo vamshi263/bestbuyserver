@@ -73,7 +73,7 @@ const upload = multer({
   storage: storage
 })
 
-app.get("/Admin/order-status", async (req, res) => {
+app.get("/admin/order-status", async (req, res) => {
   try {
     const totalOrders = await orderModel.countDocuments()
     const pending = await orderModel.countDocuments({ status: "Placed" })
@@ -386,7 +386,7 @@ app.put("/Admin/editproduct/:id", async(req,res) =>{
     .catch(err => res.json (err))
 })
 
-app.put('/admin/orderstatus/:id',async(req,res)=>{
+app.put('/Admin/orderstatus/:id',async(req,res)=>{
   try{
     const {status} = req.body
     await orderModel.findByIdAndUpdate(req.params.id,{ status: status })
