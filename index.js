@@ -31,10 +31,9 @@ const razorpay = new Razorpay({
 
 app.use(express.json())
 app.use(cors({
-    origin: ["https://bestbuy-cloned.netlify.app/"],
+    origin: ["https://bestbuy-cloned.netlify.app"],
     credentials: true
 }))
-//app.use("/uploads", express.static("uploads"))
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB Connected "))
@@ -94,7 +93,7 @@ app.get("/Admin/order-status", async (req, res) => {
   }
 })
 
-app.post('/Login',(req,res)=>{
+app.post('/login',(req,res)=>{
     const{Email,Password} = req.body; 
     userModel.findOne({Email:Email})
     .then(user => {
