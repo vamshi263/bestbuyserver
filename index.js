@@ -386,7 +386,7 @@ app.put("/Admin/editproduct/:id", async(req,res) =>{
     .catch(err => res.json (err))
 })
 
-app.put('/Admin/orderstatus/:id',async(req,res)=>{
+app.put('/admin/orderstatus/:id',async(req,res)=>{
   try{
     const {status} = req.body
     await orderModel.findByIdAndUpdate(req.params.id,{ status: status })
