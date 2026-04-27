@@ -94,6 +94,7 @@ app.get("/Admin/order-status", async (req, res) => {
 })
 
 app.post('/login',(req,res)=>{
+  console.log("Login route hit", req.body)
     const{Email,Password} = req.body; 
     userModel.findOne({Email:Email})
     .then(user => {
