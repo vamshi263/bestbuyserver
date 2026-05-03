@@ -208,7 +208,7 @@ const invoiceHTML = (order) => {
 
   <div class="signatory">
     <div class="signatory-box">
-      <div class="sig-line"> <img src=""/></div>
+      <div class="sig-line"> <img src="https://res.cloudinary.com/djeonssfn/image/upload/f_auto,q_auto/20260503_174507_qdpy81" style="width:150px;rotate:-10deg;"/></div>
       <p class="name">Authorized Signatory</p>
       <p>Finance &amp; Operations</p>
       <p>BestBuy Clone Pvt. Ltd.</p>
