@@ -122,7 +122,7 @@ app.get("/admin/order-status", async (req, res) => {
 
     orders.forEach(order => {
       order.products.forEach(p => {
-        const cat = p.ProductName || "Other"
+        const cat = p.category || "Other"
 
         if (!categoryMap[cat]) {
           categoryMap[cat] = 0
@@ -331,6 +331,7 @@ app.post("/order/place", async (req, res) => {
     detailedProducts.push({
       productId: item.productId,
       ProductName: product.ProductName,
+      category: product.Categories, 
       Price: price,
       quantity: qty,
       image: product.image, 

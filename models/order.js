@@ -8,8 +8,8 @@ const orderSchema = new mongoose.Schema({
 
       ProductName: String,
       Price: Number,
+      category: String,
       quantity: Number,
-
       image: [String], 
       gst: Number,       
       base: Number,
