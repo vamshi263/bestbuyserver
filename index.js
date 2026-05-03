@@ -316,23 +316,23 @@ app.post("/order/place", async (req, res) => {
       console.log("PDF failed:", err.message)
     }
     console.log("Reached before mail")
-await sendMail(
-  user.Email,
-  {
-    orderId: newOrder._id,
-    products: newOrder.products.map(p => ({
-      ProductName: p.ProductName,
-      quantity: p.quantity,
-      Price: p.Price,
-      base: p.base,
-      gst: p.gst,
-      total: p.total
-    })),
-    totalGST: newOrder.products.reduce((sum, p) => sum + p.gst, 0).toFixed(2),
-    totalAmount: newOrder.totalAmount
-  },
-  pdfBuffer
-)
+    sendMail(
+      user.Email,
+      {
+        orderId: newOrder._id,
+        products: newOrder.products.map(p => ({
+          ProductName: p.ProductName,
+          quantity: p.quantity,
+          Price: p.Price,
+          base: p.base,
+          gst: p.gst,
+          total: p.total
+        })),
+        totalGST: newOrder.products.reduce((sum, p) => sum + p.gst, 0).toFixed(2),
+        totalAmount: newOrder.totalAmount
+      },
+      pdfBuffer
+    )
     await cartsModel.deleteOne({ userId })
     res.json("Order placed successfully")
   } catch (err) {
