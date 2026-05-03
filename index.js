@@ -83,16 +83,66 @@ const upload = multer({
 
 app.get("/admin/order-status", async (req, res) => {
   try {
-    const totalOrders = await orderModel.countDocuments()
-    const pending = await orderModel.countDocuments({ status: "Placed" })
-    const shipped = await orderModel.countDocuments({ status: "Shipped" })
-    const delivered = await orderModel.countDocuments({ status: "Delivered" })
+    const orders = await orderModel.find()
+
+    const totalOrders = orders.length
+
+    const pending = orders.filter(o => o.status === "Placed").length
+    const shipped = orders.filter(o => o.status === "Shipped").length
+    const delivered = orders.filter(o => o.status === "Delivered").length
+
+
+    const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0)
+
+    let totalProducts = 0
+    let totalBase = 0
+    let totalGST = 0
+
+    orders.forEach(order => {
+      order.products.forEach(p => {
+        totalProducts += p.quantity
+        totalBase += p.base
+        totalGST += p.gst
+      })
+    })
+
+    const monthlySales = {}
+
+    orders.forEach(order => {
+      const month = new Date(order.date).toLocaleString("default", { month: "short" })
+
+      if (!monthlySales[month]) {
+        monthlySales[month] = 0
+      }
+
+      monthlySales[month] += order.totalAmount
+    })
+
+    const categoryMap = {}
+
+    orders.forEach(order => {
+      order.products.forEach(p => {
+        const cat = p.ProductName || "Other"
+
+        if (!categoryMap[cat]) {
+          categoryMap[cat] = 0
+        }
+
+        categoryMap[cat] += p.quantity
+      })
+    })
 
     res.json({
       totalOrders,
       pending,
       shipped,
-      delivered
+      delivered,
+      totalRevenue,
+      totalProducts,
+      totalBase,
+      totalGST,
+      monthlySales,
+      categoryMap
     })
 
   } catch (err) {

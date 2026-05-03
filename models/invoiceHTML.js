@@ -10,10 +10,10 @@ const invoiceHTML = (order) => {
     <tr>
       <td>${p.ProductName}</td>
       <td style="text-align:center;">${p.quantity}</td>
-      <td style="text-align:right;">₹${p.Price.toFixed(2)}</td>
-      <td style="text-align:right;">₹${p.base}</td>
-      <td style="text-align:right;">₹${p.gst}</td>
-      <td style="text-align:right;">₹${p.total}</td>
+      <td style="text-align:right;">$${p.Price.toFixed(2)}</td>
+      <td style="text-align:right;">$${p.base}</td>
+      <td style="text-align:right;">$${p.gst}</td>
+      <td style="text-align:right;">$${p.total}</td>
     </tr>
   `).join("")
 
@@ -187,15 +187,15 @@ const invoiceHTML = (order) => {
     <div class="totals-inner">
       <div class="row">
         <span>Subtotal (excl. GST)</span>
-        <span>₹${subtotal}</span>
+        <span>$${subtotal}</span>
       </div>
       <div class="row">
         <span>Total GST</span>
-        <span>₹${totalGST}</span>
+        <span>$${totalGST}</span>
       </div>
       <div class="row total">
         <span>Grand Total</span>
-        <span>₹${order.totalAmount}</span>
+        <span>$${order.totalAmount}</span>
       </div>
     </div>
   </div>
