@@ -350,7 +350,7 @@ app.post("/order/place", async (req, res) => {
         phone
       },
       paymentMethod: "ONLINE",
-      paymentStatus: "Pending",
+      paymentStatus: "Completed",
       payment: {
         razorpay_order_id: razorpay_order_id,
         razorpay_payment_id: paymentId
@@ -385,6 +385,84 @@ app.post("/order/place", async (req, res) => {
       pdfBuffer
     )
     await cartsModel.deleteOne({ userId })
+    res.json("Order placed successfully")
+  } catch (err) {
+    console.log(err)
+    res.json("Error placing order")
+  }
+})
+
+app.post("/order/buynow", async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.json("Please login first")
+    }
+    const userId = req.session.user.id
+    const { productId, email, phone, paymentId, razorpay_order_id } = req.body
+    const product = await productsModel.findById(productId)
+    if (!product) {
+      return res.json("Product not found")
+    }
+    const price = product.Price
+    const qty = 1
+    const gstPercent = GST_RATES[product.Categories] || GST_RATES.default
+    const total = price * qty
+    const base = total / (1 + gstPercent / 100)
+    const gstAmount = total - base
+    const newOrder = new orderModel({
+      userId,
+      products: [
+        {
+          productId,
+          ProductName: product.ProductName,
+          category: product.Categories,
+          Price: price,
+          quantity: qty,
+          image: product.image,
+          gst: Number(gstAmount.toFixed(2)),
+          base: Number(base.toFixed(2)),
+          total: Number(total.toFixed(2))
+        }
+      ],
+      totalAmount: Number(total.toFixed(2)),
+      address: {
+        email,
+        phone
+      },
+      paymentMethod: "ONLINE",
+      paymentStatus: "Completed",
+      payment: {
+        razorpay_order_id,
+        razorpay_payment_id: paymentId
+      },
+      status: "Placed"
+    })
+    await newOrder.save()
+    const user = await userModel.findById(userId)
+    let pdfBuffer = null
+    try {
+      const html = invoiceHTML(newOrder)
+      pdfBuffer = await generatePDF(html)
+    } catch (err) {
+      console.log("PDF failed:", err.message)
+    }
+    sendMail(
+      user.Email,
+      {
+        orderId: newOrder._id,
+        products: newOrder.products.map(p => ({
+          ProductName: p.ProductName,
+          quantity: p.quantity,
+          Price: p.Price,
+          base: p.base,
+          gst: p.gst,
+          total: p.total
+        })),
+        totalGST: newOrder.products.reduce((sum, p) => sum + p.gst, 0).toFixed(2),
+        totalAmount: newOrder.totalAmount
+      },
+      pdfBuffer
+    )
     res.json("Order placed successfully")
   } catch (err) {
     console.log(err)
