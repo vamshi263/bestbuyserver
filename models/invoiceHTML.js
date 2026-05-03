@@ -139,7 +139,17 @@ const invoiceHTML = (order) => {
       font-size: 13px;
       color: #222;
     }
+      .signature {
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+      }
 
+      .signature img {
+        width: 150px;
+        object-fit: contain;
+      }
     .footer {
       margin-top: 36px;
       text-align: center;
@@ -208,8 +218,10 @@ const invoiceHTML = (order) => {
 
   <div class="signatory">
     <div class="signatory-box">
+    <div class="signature">
+      <img src="https://res.cloudinary.com/djeonssfn/image/upload/f_auto,q_auto/20260503_174507_qdpy81"/>
+    </div>
       <div class="sig-line"> 
-      <img src="https://res.cloudinary.com/djeonssfn/image/upload/f_auto,q_auto/20260503_174507_qdpy81" style="width:150px;margin-top:-60px;"/></div>
       <p class="name">Authorized Signatory</p>
       <p>Finance &amp; Operations</p>
       <p>BestBuy Clone Pvt. Ltd.</p>
