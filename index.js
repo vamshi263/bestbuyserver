@@ -74,7 +74,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "products",
-    allowed_formats: ["jpg", "png", "jpeg"]
+    allowed_formats: ["jpg", "png", "jpeg", "webp"]
   }
 })
 const upload = multer({
@@ -84,14 +84,10 @@ const upload = multer({
 app.get("/admin/order-status", async (req, res) => {
   try {
     const orders = await orderModel.find()
-
     const totalOrders = orders.length
-
     const pending = orders.filter(o => o.status === "Placed").length
     const shipped = orders.filter(o => o.status === "Shipped").length
     const delivered = orders.filter(o => o.status === "Delivered").length
-
-
     const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0)
 
     let totalProducts = 0
@@ -119,15 +115,12 @@ app.get("/admin/order-status", async (req, res) => {
     })
 
     const categoryMap = {}
-
     orders.forEach(order => {
       order.products.forEach(p => {
         const cat = p.category || "Other"
-
         if (!categoryMap[cat]) {
           categoryMap[cat] = 0
         }
-
         categoryMap[cat] += p.quantity
       })
     })
@@ -201,7 +194,7 @@ app.post('/Admin/addproduct', upload.array("image",10), async(req,res)=>
 { 
   try{
     const imagePaths = req.files.map(file => file.path)
-  const newProduct = new productsModel({
+    const newProduct = new productsModel({
     ProductName: req.body.ProductName,
     Quantity: req.body.Quantity,
     Price: req.body.Price,
@@ -524,7 +517,6 @@ app.get("/category/:name", async (req, res) => {
     const products = await productsModel.find({
       Categories: category
     })
-
     res.json(products)
 
   } catch (err) {
