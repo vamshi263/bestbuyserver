@@ -156,8 +156,7 @@ app.post('/login',(req,res)=>{
                 role: user.role
             }
             req.session.save(() => {
-            res.json({
-              status: "Success",
+            res.json({status: "Login Successful",
               role: user.role
             })
         })
@@ -257,9 +256,9 @@ app.post("/payment/orders", async (req, res) => {
     res.status(500).send("Error creating Razorpay order")
   }
 })
+
 app.post("/payment/verify", async (req, res) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body
-
   try {
     const sign = razorpay_order_id + "|" + razorpay_payment_id
     const expectedSign = crypto
@@ -278,14 +277,12 @@ app.post("/payment/verify", async (req, res) => {
           paymentStatus: "Completed"
         }
       )
-
       return res.json({ message: "Payment Successfully" })
     } else {
       return res.status(400).json({
         message: "Payment verification failed"
       })
     }
-
   } catch (err) {
     console.log(err)
     return res.status(500).json({
