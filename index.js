@@ -16,6 +16,7 @@ const crypto = require("crypto")
 const Razorpay = require("razorpay")
 const invoiceHTML = require("./models/invoiceHTML")
 const generatePDF = require("./models/pdf")
+const sendStatusMail = require("./models/sendstatusmail")
 const cloudinary = require("cloudinary").v2
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
 cloudinary.config({
@@ -544,11 +545,10 @@ app.put('/Admin/orderstatus/:id',async(req,res)=>{
     await orderModel.findByIdAndUpdate(req.params.id,{ status: status })
     const order = await orderModel.findById(req.params.id)
     const user = await userModel.findById(order.userId);
-    await sendMail(user.Email, "Order Status Updated",
-    `<h3>Order Update</h3>
-      <p>Order ID: <b>${order._id}</b></p>
-      <p>Status: <b>${order.status}</b></p>`
-    )
+    await sendStatusMail(user.Email, {
+    orderId: order._id,
+    status: order.status
+})
       res.json("Status Updated")
     }
     catch(err){
