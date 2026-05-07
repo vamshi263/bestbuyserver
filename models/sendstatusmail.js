@@ -12,7 +12,7 @@ const sendStatusMail = async (to, data) => {
 
             from: process.env.USER_EMAIL,
 
-            templateId: "PASTE_YOUR_TEMPLATE_ID_HERE",
+            templateId: "d-382c6ae2e2464a40a1e69dd973710c35",
 
             dynamic_template_data: data
 
