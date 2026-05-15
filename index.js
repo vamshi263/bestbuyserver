@@ -5,6 +5,7 @@ const userModel = require ("./models/users")
 const productsModel = require('./models/product')
 const cartsModel = require('./models/cart')
 const orderModel = require("./models/order")
+const contactModel = require("./models/contact")
 const multer = require("multer")
 const sendMail = require("./models/mailer")
 const path = require("path")
@@ -667,6 +668,20 @@ app.get("/admin/orders", (req,res)=>{
   .populate("products.productId")
   .then(orders=>res.json(orders))
   .catch (err=>res.json(err))
+})
+app.post("/contact", async (req, res) => {
+  try {
+    const { name, email, message } = req.body
+    const newMessage = await contactModel.create({
+      name,
+      email,
+      message
+    })
+    res.json("Message saved successfully")
+  } catch (err) {
+    console.log(err)
+    res.status(500).json("Error saving message")
+  }
 })
 const PORT = process.env.PORT || 3001
 app.listen(PORT,() =>{
