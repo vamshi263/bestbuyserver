@@ -159,7 +159,7 @@ app.post('/login',(req,res)=>{
                 role: user.role
             }
             req.session.save(() => {
-            res.json({status: "Login Successful",
+            res.json({status: "Success",
               role: user.role
             })
         })
