@@ -625,6 +625,14 @@ app.get("/orders", (req, res) => {
     .then(orders => res.json(orders))
     .catch(err => res.json(err))
 })
+app.get("/orders/:id", async (req, res) => {
+  try {
+    const order = await orderModel.findById(req.params.id)
+    res.json(order)
+  } catch (err) {
+    res.status(500).json(err)
+  }
+})
 
 app.get("/search", async(req,res) => {
     try{
