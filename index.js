@@ -683,6 +683,24 @@ app.post("/contact", async (req, res) => {
     res.status(500).json("Error saving message")
   }
 })
+app.get("/admin/messages", async (req, res) => {
+  try {
+    const messages = await contactModel.find().sort({ createdAt: -1 })
+    res.json(messages)
+  } catch (err) {
+    console.log(err)
+    res.status(500).json("Error fetching messages")
+  }
+})
+app.delete("/admin/messages/:id", async (req, res) => {
+  try {
+    await contactModel.findByIdAndDelete(req.params.id)
+    res.json("Message deleted")
+  } catch (err) {
+    console.log(err)
+    res.status(500).json("Error deleting message")
+  }
+})
 const PORT = process.env.PORT || 3001
 app.listen(PORT,() =>{
     console.log("Server Running...")
