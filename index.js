@@ -514,7 +514,10 @@ app.get("/category/:name", async (req, res) => {
       .join(" ")
 
     const products = await productsModel.find({
-      Categories: category
+        Categories: {
+          $regex: `^${category}$`,
+          $options: "i"
+        }
     })
     res.json(products)
 
