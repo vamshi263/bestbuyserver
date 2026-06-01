@@ -300,7 +300,7 @@ app.post("/order/place", async (req, res) => {
       return res.json("Please login first")
     }
     const userId = req.session.user.id
-    const { email, phone, paymentId, razorpay_order_id } = req.body
+    const {email, phone, fullName,  house, area, city, state, pincode, paymentId, razorpay_order_id} = req.body
     const cart = await cartsModel.findOne({ userId })
     if (!cart || cart.products.length === 0) {
       return res.json("Cart is empty")
@@ -337,8 +337,14 @@ app.post("/order/place", async (req, res) => {
       products: detailedProducts,
       totalAmount: finalTotalRounded,
       address: {
+        fullName,
         email,
-        phone
+        phone,
+        house,
+        area,
+        city,
+        state,
+        pincode
       },
       paymentMethod: "ONLINE",
       paymentStatus: "Completed",
@@ -389,7 +395,7 @@ app.post("/order/buynow", async (req, res) => {
       return res.json("Please login first")
     }
     const userId = req.session.user.id
-    const { productId, email, phone, paymentId, razorpay_order_id } = req.body
+    const {email, phone, fullName,  house, area, city, state, pincode, paymentId, razorpay_order_id} = req.body
     const product = await productsModel.findById(productId)
     if (!product) {
       return res.json("Product not found")
@@ -417,8 +423,14 @@ app.post("/order/buynow", async (req, res) => {
       ],
       totalAmount: Number(total.toFixed(2)),
       address: {
+        fullName,
         email,
-        phone
+        phone,
+        house,
+        area,
+        city,
+        state,
+        pincode
       },
       paymentMethod: "ONLINE",
       paymentStatus: "Completed",
