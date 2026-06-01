@@ -395,7 +395,7 @@ app.post("/order/buynow", async (req, res) => {
       return res.json("Please login first")
     }
     const userId = req.session.user.id
-    const {email, phone, fullName,  house, area, city, state, pincode, paymentId, razorpay_order_id} = req.body
+    const { productId, email, phone, paymentId, razorpay_order_id } = req.body
     const product = await productsModel.findById(productId)
     if (!product) {
       return res.json("Product not found")
@@ -423,6 +423,7 @@ app.post("/order/buynow", async (req, res) => {
       ],
       totalAmount: Number(total.toFixed(2)),
       address: {
+        productId,
         fullName,
         email,
         phone,
